@@ -1,0 +1,26 @@
+# When a change to the pinned public key reaches `main`, open an issue. GitHub then notifies the owner by email and, with the GitHub
+# mobile app, on the phone. This is deliberately loud: the pinned key is what the monitor trusts to decide that the loader is genuine.
+name: Key change alert
+on:
+  push:
+    branches: [main]
+    paths:
+      - keys/**
+permissions:
+  contents: read
+  issues: write
+jobs:
+  alert:
+    name: alert (pinned key changed)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Open an issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          COMMIT: ${{ github.sha }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          gh issue create --repo "${REPOSITORY}" \
+            --title "ALERT: the pinned manifest public key changed" \
+            --body "The file keys/ changed on main in commit ${COMMIT} (pushed by ${ACTOR}). If you did not expect this, treat the monitor as untrusted and follow the loader-compromise procedure in RUNBOOK.md of the product repository."

@@ -1,0 +1,11 @@
+{
+  "name": "accesi-monitor",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Public monitor of the Accesi+ widget: checks the published loader against a signed release manifest every five minutes.",
+  "scripts": {
+    "test": "node --test",
+    "monitor": "node src/monitor.mjs"
+  }
+}

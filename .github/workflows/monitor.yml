@@ -1,0 +1,38 @@
+# Every five minutes: verify the published loader against the signed manifest and, only if everything matches, send the heartbeat.
+# An external monitor (UptimeRobot) alerts when the heartbeat stops arriving, so a mismatch, a failed run and a skipped or disabled
+# schedule all end in the same alert. GitHub may delay scheduled runs and disables them after 60 days without repository activity in
+# a public repository: that is why the alert is "no heartbeat" and not "a failed run". Detection objective: 15 minutes.
+name: Monitor
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: monitor
+  cancel-in-progress: true
+jobs:
+  check:
+    name: check (published files)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - name: Verify the manifest and the published files
+        run: node src/monitor.mjs
+      - name: Send the heartbeat
+        env:
+          # The only secret of this repository.
+          HEARTBEAT_URL: ${{ secrets.HEARTBEAT_URL }}
+        run: |
+          if [ -z "${HEARTBEAT_URL}" ]; then
+            echo "HEARTBEAT_URL is not set yet: no heartbeat sent"
+            exit 0
+          fi
+          curl -fsS --retry 3 --max-time 20 --output /dev/null "${HEARTBEAT_URL}"
