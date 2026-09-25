@@ -128,4 +128,8 @@ jobs:
             git show "${BASE_SHA}:manifest/manifest.json" > "${RUNNER_TEMP}/previous.json"
             previous="${RUNNER_TEMP}/previous.json"
           fi
-          node src/check-change.mjs ${previous}
+          if [ -n "${previous}" ]; then
+            node src/check-change.mjs "${previous}"
+          else
+            node src/check-change.mjs
+          fi
