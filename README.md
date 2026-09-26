@@ -17,7 +17,7 @@ heartbeat URL (an Actions secret named `HEARTBEAT_URL`). It is public on purpose
    (`key-change-alert.yml`), which notifies the owner by email and on the phone through the GitHub app.
 3. `.github/workflows/monitor.yml` runs every five minutes: it verifies the signature, downloads every listed file from
    `https://cdn.accesimas.cl/v1/` (no redirects followed) and compares hashes. On any difference the job fails and **no heartbeat is sent**.
-4. The external monitor (UptimeRobot) expects the heartbeat every five minutes with a 15 minute grace. A mismatch, a failed run, a
+4. The external monitor (Healthchecks.io) expects the heartbeat every five minutes with a 15 minute grace. A mismatch, a failed run, a
    skipped or delayed schedule and a schedule that GitHub disabled all end in the same alert.
 
 Until the first release publishes a manifest the monitor reports "not armed" and exits successfully.

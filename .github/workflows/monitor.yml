@@ -1,5 +1,5 @@
 # Every five minutes: verify the published loader against the signed manifest and, only if everything matches, send the heartbeat.
-# An external monitor (UptimeRobot) alerts when the heartbeat stops arriving, so a mismatch, a failed run and a skipped or disabled
+# An external monitor (Healthchecks.io) alerts when the heartbeat stops arriving, so a mismatch, a failed run and a skipped or disabled
 # schedule all end in the same alert. GitHub may delay scheduled runs and disables them after 60 days without repository activity in
 # a public repository: that is why the alert is "no heartbeat" and not "a failed run". Detection objective: 15 minutes.
 name: Monitor
