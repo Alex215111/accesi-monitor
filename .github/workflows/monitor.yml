@@ -1,7 +1,12 @@
 # Every five minutes: verify the published loader against the signed manifest and, only if everything matches, send the heartbeat.
-# An external monitor (Healthchecks.io) alerts when the heartbeat stops arriving, so a mismatch, a failed run and a skipped or disabled
-# schedule all end in the same alert. GitHub may delay scheduled runs and disables them after 60 days without repository activity in
-# a public repository: that is why the alert is "no heartbeat" and not "a failed run". Detection objective: 15 minutes.
+# An external monitor (Healthchecks.io, period 5 minutes + grace 10 minutes) alerts when the heartbeat stops arriving, so a mismatch,
+# a failed run, a run that never started and a disabled workflow all end in the same alert: that is why the alert is "no heartbeat"
+# and not "a failed run". Detection objective: 15 minutes (period + grace).
+#
+# WHO STARTS IT: an external cron (cron-job.org, every 5 minutes) calls `workflow_dispatch` with a fine-grained token limited to this
+# repository (Actions: read and write, 90 days). The `schedule` below is only a BACKUP: measured on this repository, GitHub's `*/5`
+# schedule ran 4 times in about 13 hours, with gaps from 2 h 24 min to 5 h 34 min, so it cannot be the trigger. GitHub also disables
+# scheduled workflows of a public repository after 60 days without activity.
 name: Monitor
 on:
   schedule:
@@ -9,9 +14,11 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+# One run at a time. A run that is in progress is NOT cancelled by the next trigger (cancelling it would drop its heartbeat); the
+# next one waits, and only the newest waiting run is kept, so triggers from the external cron and from the backup never pile up.
 concurrency:
   group: monitor
-  cancel-in-progress: true
+  cancel-in-progress: false
 jobs:
   check:
     name: check (published files)
