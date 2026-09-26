@@ -17,15 +17,25 @@ heartbeat URL (an Actions secret named `HEARTBEAT_URL`). It is public on purpose
    (`key-change-alert.yml`), which notifies the owner by email and on the phone through the GitHub app.
 3. `.github/workflows/monitor.yml` runs every five minutes: it verifies the signature, downloads every listed file from
    `https://cdn.accesimas.cl/v1/` (no redirects followed) and compares hashes. On any difference the job fails and **no heartbeat is sent**.
-4. The external monitor (Healthchecks.io) expects the heartbeat every five minutes with a 15 minute grace. A mismatch, a failed run, a
-   skipped or delayed schedule and a schedule that GitHub disabled all end in the same alert.
+4. **What starts it:** an external cron (cron-job.org, every five minutes) calls the workflow's `workflow_dispatch` with a
+   fine-grained token limited to this repository (`Actions: read and write`, 90 days, rotated by the owner). GitHub's own `schedule`
+   is kept only as a **backup**, because it is not reliable (see below). A `concurrency` group keeps runs from overlapping.
+5. The external monitor (Healthchecks.io) expects the heartbeat with a **period of 5 minutes and a grace of 10 minutes**, so the
+   detection objective is **15 minutes (period + grace)**. A mismatch, a failed run, a trigger that never fired, an expired or stolen
+   token and a disabled workflow all end in the same alert: no heartbeat.
 
 Until the first release publishes a manifest the monitor reports "not armed" and exits successfully.
 
 ## Known limits
 
-- GitHub can delay or skip scheduled runs, and disables them after 60 days without repository activity in a public repository. The
-  detection objective is 15 minutes, with no guarantee. A release opens a pull request each time, which counts as activity.
+- GitHub's `schedule` is **not a usable trigger**: measured on this repository, `*/5` ran 4 times in about 13 hours, with gaps of
+  2 h 24 min to 5 h 34 min. That is why an external cron starts the workflow and the `schedule` is only a backup. GitHub also disables
+  scheduled workflows of a public repository after 60 days without activity; a release opens a pull request each time, which counts
+  as activity.
+- The trigger token could be stolen: it can start or disable the workflow, but it cannot send or fake the heartbeat (that URL is an
+  Actions secret the token cannot read), so the worst case is the missing heartbeat, which alerts (risk C-08 of the product threat
+  model). The token is rotated every 90 days.
+- The objective is 15 minutes (period 5 + grace 10) once the external cron is running; it is a target, not a guarantee.
 - If the release job that signs the manifest is compromised it can sign a malicious manifest; the monitor cannot detect that (risk
   C-07 of the product threat model, accepted).
 
