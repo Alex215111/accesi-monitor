@@ -1,0 +1,9 @@
+{
+  "kty": "EC",
+  "crv": "P-256",
+  "x": "yOniqGpVFEmAcFoGDpNFVePHX2ZbRo6Ysdko05q0Sh8",
+  "y": "dgjmHj4DXmQdG78IgCdAgqmFkNOX_mJhzlcHu5pmZc8",
+  "kid": "wc-manifest-2026-09-25",
+  "use": "sig",
+  "alg": "ES256"
+}
